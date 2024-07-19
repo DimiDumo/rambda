@@ -51,7 +51,10 @@ async fn exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::Res
     let queue = channel_a
         .queue_declare(
             "exex",
-            QueueDeclareOptions::default(),
+            QueueDeclareOptions {
+                durable: true,
+                ..Default::default()
+            },
             FieldTable::default(),
         )
         .await?;

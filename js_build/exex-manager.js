@@ -44,6 +44,8 @@ async function subscribe() {
     }
   });
 
+  console.log('Consuming messages from ', QUEUE_NAME);
+
   // Sender
   // const ch2 = await conn.createChannel();
   // console.log('created sender channel');
