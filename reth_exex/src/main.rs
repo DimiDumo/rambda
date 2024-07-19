@@ -3,10 +3,15 @@ use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_api::FullNodeComponents;
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
-use redis::{Client, Commands};
+// use redis::{Client, Commands};
 use serde_json;
 use eyre::eyre;
 use std::time::{SystemTime, UNIX_EPOCH};
+use futures::executor::block_on;
+use lapin::{
+    options::*, publisher_confirm::Confirmation, types::FieldTable, BasicProperties, Connection,
+    ConnectionProperties,
+};
 
 /// The initialization logic of the ExEx is just an async function.
 ///
@@ -23,13 +28,47 @@ async fn exex_init<Node: FullNodeComponents>(
 /// This ExEx just prints out whenever either a new chain of blocks being added, or a chain of
 /// blocks being re-orged. After processing the chain, emits an [ExExEvent::FinishedHeight] event.
 async fn exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::Result<()> {
-    info!("Connecting to redis");
-    let client = Client::open("redis://localhost:6379")?;
-    info!("Connected to redis successfully");
-    let mut con = client.get_multiplexed_tokio_connection().await?;
-    info!("Got redis connection");
-    redis::cmd("PUBLISH").arg("init").arg("yo diggi 2").query_async(&mut con).await?;
-    info!("Published init message");
+    // info!("Connecting to redis");
+    // let client = Client::open("redis://localhost:6379")?;
+    // info!("Connected to redis successfully");
+    // let mut con = client.get_multiplexed_tokio_connection().await?;
+    // info!("Got redis connection");
+    // redis::cmd("PUBLISH").arg("init").arg("yo diggi 2").query_async(&mut con).await?;
+    // info!("Published init message");
+
+
+    let conn = Connection::connect(
+        "amqp://user:password@localhost:5672",
+        ConnectionProperties::default(),
+    )
+    .await?;
+
+    info!("CONNECTED to rabbitmq");
+
+    let channel_a = conn.create_channel().await?;
+    let channel_b = conn.create_channel().await?;
+
+    let queue = channel_a
+        .queue_declare(
+            "exex",
+            QueueDeclareOptions::default(),
+            FieldTable::default(),
+        )
+        .await?;
+
+    info!(?queue, "Declared queue");
+
+    let confirm = channel_a
+        .basic_publish(
+            "",
+            "hello",
+            BasicPublishOptions::default(),
+            b"Yo hey whats up from ExEx",
+            BasicProperties::default(),
+        )
+        .await?
+        .await?;
+
 
     while let Some(notification) = ctx.notifications.recv().await {
         match &notification {
@@ -48,10 +87,10 @@ async fn exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::Res
                 info!("JSON size: {:.2} MB", json_size_in_mb);
 
                 if json_size_in_mb < 12. {
-                    redis::cmd("PUBLISH").arg("chain_committed").arg(json).query_async(&mut con).await.map_err(|err| {
-                        info!("Failed to publish json to redis");
-                        eyre!(err)
-                    })?;
+                    // redis::cmd("PUBLISH").arg("chain_committed").arg(json).query_async(&mut con).await.map_err(|err| {
+                    //     info!("Failed to publish json to redis");
+                    //     eyre!(err)
+                    // })?;
                     info!("Published chain_committed");
                 } else {
                     info!("Skipping");
@@ -72,10 +111,10 @@ async fn exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::Res
                 info!("JSON size: {:.2} MB", json_size_in_mb);
 
                 if json_size_in_mb < 12. {
-                    redis::cmd("PUBLISH").arg("chain_reorged").arg(json).query_async(&mut con).await.map_err(|err| {
-                        info!("Failed to publish json to redis");
-                        eyre!(err)
-                    })?;
+                    // redis::cmd("PUBLISH").arg("chain_reorged").arg(json).query_async(&mut con).await.map_err(|err| {
+                    //     info!("Failed to publish json to redis");
+                    //     eyre!(err)
+                    // })?;
                     info!("Published chain_reorged")
                 } else {
                     info!("Skipping");
@@ -96,10 +135,10 @@ async fn exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::Res
                 info!("JSON size: {:.2} MB", json_size_in_mb);
 
                 if json_size_in_mb < 12. {
-                    redis::cmd("PUBLISH").arg("chain_reverted").arg(json).query_async(&mut con).await.map_err(|err| {
-                        info!("Failed to publish json to redis");
-                        eyre!(err)
-                    })?;
+                    // redis::cmd("PUBLISH").arg("chain_reverted").arg(json).query_async(&mut con).await.map_err(|err| {
+                    //     info!("Failed to publish json to redis");
+                    //     eyre!(err)
+                    // })?;
                     info!("Published chain_reverted")
                 } else {
                     info!("Skipping");

@@ -1,5 +1,5 @@
 import { ExEx } from './index.js';
-import amqp from 'amqplib/callback_api';
+import amqplib from 'amqplib';
 
 function main() {
   console.log('Starting main');
@@ -15,40 +15,41 @@ function main() {
 // Start main thread
 main();
 
-const RABBITMQ_URL =
-  process.env.RABBITMQ_URL || 'amqp://user:password@localhost:5672';
-
 // Subscribe to events from RabbitMQ
-function subscribe() {
-  // Replace with your RabbitMQ server URL
-  const QUEUE_NAME = 'test_queue';
+async function subscribe() {
+  // TODO: actual retry
 
-  amqp.connect(RABBITMQ_URL, (connectError, connection) => {
-    if (connectError) {
-      throw connectError;
+  await new Promise((r) => setTimeout(r, 10_000));
+
+  const RABBITMQ_URL =
+    process.env.RABBITMQ_URL || 'amqp://user:password@localhost:5672';
+
+  const QUEUE_NAME = 'exex';
+  const conn = await amqplib.connect(RABBITMQ_URL);
+
+  console.log('got connection to rabbitmq');
+
+  const ch1 = await conn.createChannel();
+  console.log('created channel');
+  await ch1.assertQueue(QUEUE_NAME);
+  console.log('assertedQueue');
+
+  // Listener
+  ch1.consume(QUEUE_NAME, (msg) => {
+    if (msg !== null) {
+      console.log('Received:', msg.content.toString());
+      ch1.ack(msg);
+    } else {
+      console.log('Consumer cancelled by server');
     }
-
-    connection.createChannel((channelError, channel) => {
-      if (channelError) {
-        throw channelError;
-      }
-
-      console.log('connected to channel: ', channel);
-
-      channel.assertQueue(QUEUE_NAME, {
-        durable: true,
-      });
-
-      console.log(
-        `[*] Waiting for messages in ${QUEUE_NAME}. To exit press CTRL+C`,
-      );
-
-      channel.consume(QUEUE_NAME, (msg) => {
-        if (msg !== null) {
-          console.log(`[x] Received ${msg.content.toString()}`);
-          channel.ack(msg);
-        }
-      });
-    });
   });
+
+  // Sender
+  // const ch2 = await conn.createChannel();
+  // console.log('created sender channel');
+
+  // setInterval(() => {
+  //   console.log('sending to queue');
+  //   ch2.sendToQueue(QUEUE_NAME, Buffer.from('something to do'));
+  // }, 1000);
 }
