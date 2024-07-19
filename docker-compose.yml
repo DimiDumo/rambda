@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - '5672:5672' # RabbitMQ main port
+      - '15672:15672' # RabbitMQ management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+
+  exex_manager_js:
+    image: exex_manager_js # Use the tag you used for your local build
+    container_name: exex_manager_js
+    build:
+      context: ./js_build # Specify the build context
+    depends_on:
+      - rabbitmq # Ensure RabbitMQ starts before this service
+    environment:
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672 # URL to access RabbitMQ
+    ports:
+      - '3000:3000' # Example port mapping for your app, adjust as necessary
+
+networks:
+  default:
+    external:
+      name: bridge
