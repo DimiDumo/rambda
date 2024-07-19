@@ -24,7 +24,7 @@ COPY exex-manager.js /app
 
 # Manually install a specific dependency
 # TODO: fix a version for redis
-RUN pnpm add redis
+RUN pnpm add amqplib
 
 # Command to run your application (adjust as necessary)
 CMD ["node", "exex-manager.js"]
