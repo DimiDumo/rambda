@@ -48,9 +48,11 @@ async fn exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::Res
     let channel_a = conn.create_channel().await?;
     let channel_b = conn.create_channel().await?;
 
+    let QUEUE_NAME = "exex";
+
     let queue = channel_a
         .queue_declare(
-            "exex",
+            QUEUE_NAME,
             QueueDeclareOptions {
                 durable: true,
                 ..Default::default()
@@ -64,13 +66,15 @@ async fn exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::Res
     let confirm = channel_a
         .basic_publish(
             "",
-            "hello",
+            QUEUE_NAME,
             BasicPublishOptions::default(),
             b"Yo hey whats up from ExEx",
             BasicProperties::default(),
         )
         .await?
         .await?;
+
+    info!("confirm: {:?}", confirm);
 
 
     while let Some(notification) = ctx.notifications.recv().await {
