@@ -11,15 +11,29 @@ services:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
 
-  exex_manager_js:
-    image: exex_manager_js # Use the tag you used for your local build
-    container_name: exex_manager_js
+  # exex_manager_js:
+  #   image: exex_manager_js # Use the tag you used for your local build
+  #   container_name: exex_manager_js
+  #   build:
+  #     context: ./js_build # Specify the build context
+  #   depends_on:
+  #     - rabbitmq # Ensure RabbitMQ starts before this service
+  #   environment:
+  #     RABBITMQ_URL: amqp://user:password@rabbitmq:5672 # URL to access RabbitMQ
+  #   ports:
+  #     - '3000:3000' # Example port mapping for your app, adjust as necessary
+
+  exex_manager:
+    image: exex_manager # Use the tag you used for your local build
+    container_name: exex_managers
     build:
-      context: ./js_build # Specify the build context
+      context: ../rambda_exex_manager # Specify the build context
     depends_on:
       - rabbitmq # Ensure RabbitMQ starts before this service
+      - postgres
     environment:
       RABBITMQ_URL: amqp://user:password@rabbitmq:5672 # URL to access RabbitMQ
+      POSTGRES_URL: postgresql://user:password@postgres:5432/rambda # URL to access RabbitMQ
     ports:
       - '3000:3000' # Example port mapping for your app, adjust as necessary
 
