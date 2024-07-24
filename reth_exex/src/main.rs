@@ -68,7 +68,7 @@ async fn exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::Res
             "",
             QUEUE_NAME,
             BasicPublishOptions::default(),
-            b"Yo hey whats up from ExEx",
+            b"{\"hi\": \"from exex\"}",
             BasicProperties::default(),
         )
         .await?

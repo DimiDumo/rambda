@@ -10,8 +10,6 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
-    networks:
-      - my_network
 
   exex_manager_js:
     image: exex_manager_js # Use the tag you used for your local build
@@ -24,9 +22,15 @@ services:
       RABBITMQ_URL: amqp://user:password@rabbitmq:5672 # URL to access RabbitMQ
     ports:
       - '3000:3000' # Example port mapping for your app, adjust as necessary
-    networks:
-      - my_network
 
-networks:
-  my_network:
-    driver: bridge
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: rambda
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data

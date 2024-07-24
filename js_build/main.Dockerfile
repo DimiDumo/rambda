@@ -4,17 +4,23 @@ FROM node:20-alpine
 # Install pnpm
 RUN npm install -g pnpm
 
-# Set environment variables
-ENV GITHUB_TOKEN=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
-
 # Install git to clone the repository
 RUN apk add --no-cache git
 
-# Clone the private GitHub repository
-RUN git clone https://${GITHUB_TOKEN}@github.com/dimidumo/rambda_js_exex.git /app
+
+# Set environment variables
+ARG GITHUB_ACCESS_TOKEN
+ARG REPO_NAME
+ARG BRANCH_NAME
+
+# Clone the private GitHub repository and force rebuild from here onward
+ARG CACHE_BUST=1
+RUN git clone https://$GITHUB_ACCESS_TOKEN@github.com/dimidumo/$REPO_NAME.git /app
 
 # Set the working directory
 WORKDIR /app
+
+RUN git checkout $BRANCH_NAME
 
 # Install dependencies using pnpm
 RUN pnpm install
