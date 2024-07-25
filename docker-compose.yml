@@ -34,8 +34,17 @@ services:
     environment:
       RABBITMQ_URL: amqp://user:password@rabbitmq:5672 # URL to access RabbitMQ
       POSTGRES_URL: postgresql://user:password@postgres:5432/rambda # URL to access RabbitMQ
+      DOCKER_SOCKET_PATH: /var/run/docker.sock
+      ABSOLUTE_DATA_FILE_PATH: /Users/dimitridumonet/Code/rambda/shared_data
     ports:
       - '3000:3000' # Example port mapping for your app, adjust as necessary
+    # Map docker runner from outside the container in the container
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Replace with host file system, should be same as above
+      - /Users/dimitridumonet/Code/rambda/shared_data:/app/shared_data
+    # extra_hosts:
+    #   - 'host.docker.internal:host-gateway'
 
   postgres:
     image: postgres:latest

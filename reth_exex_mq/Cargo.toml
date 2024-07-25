@@ -20,6 +20,9 @@ prost = "0.13"
 tokio.workspace = true
 tokio-stream = "0.1"
 
+# Custom
+chrono = "0.4"
+
 [build-dependencies]
 tonic-build = "0.12"
 
@@ -33,7 +36,3 @@ optimism = ["reth/optimism"]
 [[bin]]
 name = "remote-exex"
 path = "bin/exex.rs"
-
-[[bin]]
-name = "remote-consumer"
-path = "bin/consumer.rs"

@@ -7,7 +7,6 @@ RUN npm install -g pnpm
 # Install git to clone the repository
 RUN apk add --no-cache git
 
-
 # Set environment variables
 ARG GITHUB_ACCESS_TOKEN
 ARG REPO_NAME
